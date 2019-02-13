@@ -17,7 +17,7 @@ def sessionization(*args):
 
     # Read data from log using numpy
     logdata = genfromtxt(logpath, delimiter=',', encoding="utf8", dtype=object, names=True)
-
+    
     # Find unique IPs
     ip = np.unique(logdata['ip'])
 
@@ -29,7 +29,7 @@ def sessionization(*args):
                 session = np.array([user[j][0],user[j][1],user[j][2],'','',int(1),int(1)], dtype=object)
             else:
                 session = np.vstack((session,np.array([user[j][0],user[j][1],user[j][2],'','',int(1),int(1)], dtype=object)))
-
+                
     # Evaluate sessions by looping through ip, subset to datetime relative to inactivity threshold, and calculate 
     # end datetime, duration, and request count 
     for i in ip:
@@ -71,22 +71,25 @@ def sessionization(*args):
                     # For each datetime for a user, take difference between next datetime and current. If delta > inactive, 
                     # treat as a new session. Otherwise, add to current session request number and duration
                     tdelt = int(user_datetimes_obj[dtidx+1][0].second) - int(user_datetimes_obj[dtidx][0].second)
-                    # Take first request of an ip, sub this into sessions after calculating
-                    req = np.take(session[session[:,0] == i],[0,1,2,3,4,5,6]) 
                     if tdelt <= inactive:
+                        # Take first request of an ip, sub this into sessions after calculating
+                        sesh = np.take(session[session[:,0] == i],[0,1,2,3,4,5,6]) 
                         # Replace end date with that of subsequent request (will end on the last request for that session)
-                        req[3] = user[dtidx+1][1]
+                        sesh[3] = user[dtidx+1][1]
                         # Replace end time with that of subsequent request (will end on the last request for that session)
-                        req[4] = user[dtidx+1][2] 
+                        sesh[4] = user[dtidx+1][2] 
                         # Add duration subsequent request to session duration
-                        req[5] = req[5] + int((user_datetimes_obj[dtidx+1][0].second))
+                        sesh[5] = sesh[5] + int((user_datetimes_obj[dtidx+1][0].second))
                         # Add to count of requests for session
-                        req[6] = req[6] + 1
-                        # Write to outputfile (sesspath)
-                        with open(sesspath, 'w', encoding='utf8') as outputfile:
-                             outputfile.write(','.join(req.astype(str)) + '\n')
+                        sesh[6] = sesh[6] + 1
+                    else:
+                        continue
+            # Write the last sesh for an IP to outputfile (sesspath)
+            with open(sesspath, 'w', encoding='utf8') as outputfile:
+                outputfile.write(','.join(sesh.astype(str)) + '\n')
 
-# Need to have it not write until after the end of the session, and still need to account for same-IP but new session (tdelt > inactive)                        
+
+# Still need to account for same-IP but new session (tdelt > inactive)                        
 
 directory = 'C:/Users/maxca/Documents/GitHub/codingchallenge_edgar-analytics'
 sessionization(directory+'/input/log.csv', directory+'/input/inactivity_period.txt', directory+'/output/sessionization.txt')
