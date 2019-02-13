@@ -35,9 +35,12 @@ def sessionization(*args):
     for i in ip:
         # Find users with only one request
         if len(session[session[:,0] == i]) == 1:
-            # Set end datetime == start datetime
+            # Set end datetime == start datetime and write to output file
             session[session[:,0] == i,3] = session[session[:,0] == i,1]
             session[session[:,0] == i,4] = session[session[:,0] == i,2]
+            sesh = session[session[:,0] == i]
+            with open(sesspath, 'w', encoding='utf8') as outputfile:
+                outputfile.write(','.join(sesh[0].astype(str)) + '\n')
         else:
             # Subset by IPs
             user = session[session[:,0] == i]
@@ -83,7 +86,7 @@ def sessionization(*args):
                         with open(sesspath, 'w', encoding='utf8') as outputfile:
                              outputfile.write(','.join(req.astype(str)) + '\n')
 
-# Need to either fit req into sessions or write it to output directly and account for when tdelt > inactive, otherwise what I have so far works.                        
+# Need to have it not write until after the end of the session, and still need to account for same-IP but new session (tdelt > inactive)                        
 
 directory = 'C:/Users/maxca/Documents/GitHub/codingchallenge_edgar-analytics'
 sessionization(directory+'/input/log.csv', directory+'/input/inactivity_period.txt', directory+'/output/sessionization.txt')
