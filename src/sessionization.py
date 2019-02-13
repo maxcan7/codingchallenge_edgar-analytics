@@ -1,13 +1,10 @@
+import sys
+import numpy as np
+from numpy import genfromtxt
+import datetime as dt
+
+
 def sessionization(*args):
-    import numpy as np
-    from numpy import genfromtxt
-    import datetime as dt
-
-    # Separate input and output paths and variables into separate lists
-    logpath = args[0]
-    inactpath = args[1]
-    sesspath = args[2]
-
     # Read in the inactivity period threshold
     with open(inactpath) as f:
         inactive = f.read()
@@ -121,7 +118,8 @@ def sessionization(*args):
 # Need to have it write in the correct order (sorted by datetime),
 # or just sort it post-hoc but that feels like cheating
 
-directory = 'C:/Users/maxca/Documents/GitHub/codingchallenge_edgar-analytics'
-sessionization(directory+'/input/log.csv',
-               directory+'/input/inactivity_period.txt',
-               directory+'/output/sessionization.txt')
+# Separate input and output paths and variables into separate lists
+logpath = sys.argv[1]
+inactpath = sys.argv[2]
+sesspath = sys.argv[3]
+sessionization(logpath, inactpath, sesspath)
