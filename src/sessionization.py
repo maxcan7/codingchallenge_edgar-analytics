@@ -60,11 +60,13 @@ def sessionization(*args):
                     user_datetimes = np.vstack(
                         (user_datetimes, np.hstack([user[u, 1],
                          user[u, 2]])))
+
             # Convert date and time objects to string
             user_datetimes = user_datetimes.astype(str)
             # Concatenate date and time strings
             user_datetimes = np.apply_along_axis(lambda d: d[0] + ' ' +
                                                  d[1], 1, user_datetimes)
+
             # Loop through each instance and convert datetime
             # string to datetime object
             idx = 0
@@ -77,17 +79,18 @@ def sessionization(*args):
                     user_datetimes_obj = np.vstack(
                         (user_datetimes_obj, [dt.datetime.strptime(
                             dtidx, '%Y-%m-%d %H:%M:%S')]))
+
             # Delete the ith user_datetimes before next i
             del user_datetimes
             # Calculate sessions, requests, and durations for each ip
-            for dtidx in range(len(user_datetimes_obj)):
-                if dtidx != len(user_datetimes_obj):
+            for dtidx in range(user_datetimes_obj.size):
+                if dtidx < user_datetimes_obj.size-1:
                     # For each datetime for a user, take difference between
                     # next datetime and current. If delta > inactive,
                     # treat as a new session. Otherwise, add to current
                     # session request number and duration
-                    tdelt = int(user_datetimes_obj[dtidx+1][0].second)
-                    - int(user_datetimes_obj[dtidx][0].second)
+                    tdelt = int(user_datetimes_obj[dtidx+1][0].second) - \
+                            int(user_datetimes_obj[dtidx][0].second)
                     if tdelt <= inactive:
                         # Take first request of an ip, sub this into
                         # sessions after calculating
@@ -106,6 +109,7 @@ def sessionization(*args):
                         sesh[6] = sesh[6] + 1
                     else:
                         continue
+
             # Write the last sesh for an IP to outputfile (sesspath)
             with open(sesspath, 'a', encoding='utf8') as outputfile:
                 outputfile.write(','.join(sesh.astype(str)) + '\n')
@@ -113,8 +117,6 @@ def sessionization(*args):
 
 
 # Still need to account for same-IP but new session (tdelt > inactive)
-# There's a bug I've failed to identify- seems to work when I run
-# line-by-line but not when running the shell script...
 # Need to have it write in the correct order (sorted by datetime),
 # or just sort it post-hoc but that feels like cheating
 
